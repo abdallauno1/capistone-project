@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perscholas-site
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: perscholas-site
+  template:
+    metadata:
+      labels:
+        app: perscholas-site
+    spec:
+      containers:
+      - name: perscholas-site
+        image: abdallauno1/perscholas:v1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: perscholas-service
+spec:
+  selector:
+    app: perscholas-site
+  ports:
+  - protocol: "TCP"
+    port: 4000
+    targetPort: 5000
+  type: LoadBalancer

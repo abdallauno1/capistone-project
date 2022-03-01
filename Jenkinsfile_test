@@ -1,0 +1,54 @@
+pipeline{
+    agent {label 'vagrant-worker'}
+    environment{
+      DOCKERHUB_CREDENTIALS = credentials('abdallauno1-dockerhub')
+    }
+    stages{
+
+        stage("Build Image"){
+          /* build docker image  */
+            steps{
+                sh 'docker build -t abdallauno1/perscholas:v1 .'
+            }            
+        }
+        stage("Login to DockerHub"){
+          /* login in dockerhub  */
+            steps{
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+            }            
+        }
+        stage("Push image DockerHub"){
+          /* push docker image to dockerhub */
+            steps{
+                sh 'docker push abdallauno1/perscholas:v1'
+            }            
+        }
+	    
+			stage("Deploy Application in Test Env..."){
+	        steps{
+               
+							 		sh '''
+										set +x	
+										rm -rf ~/ansible/
+			 							mkdir ~/ansible/				    			  
+										cp -r playbook.yml hosts ~/ansible
+										cd ~/ansible/	
+										ansible-playbook -i hosts playbook.yml"
+	              '''          
+                }       
+          }
+
+    }
+	
+    post{
+        always{
+            sh "docker logout"
+        }
+        success{
+            echo "========pipeline executed successfully ========"
+        }
+        failure{
+            echo "========pipeline execution failed========"
+        }
+    }
+}

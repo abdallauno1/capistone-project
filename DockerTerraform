@@ -1,0 +1,24 @@
+terraform {
+  required_providers {
+    docker = {
+      source  = "kreuzwerker/docker"
+      version = "~> 2.13.0"
+    }
+  }
+}
+
+provider "docker" {}
+
+resource "docker_image" "perscholas" {
+  name         = "abdallauno1/perscholas:v1"
+  keep_locally = false
+}
+
+resource "docker_container" "perscholas" {
+  image = docker_image.abdallauno1/perscholas:v1
+  name  = "tutorial"
+  ports {
+    internal = 5000
+    external = 5000
+  }
+}

@@ -1,0 +1,89 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: install dependencies
+    ansible.builtin.apt:
+      name: "{{item}}"
+      state: present
+      force_apt_get: "yes"
+    loop:
+       - apt-transport-https
+       - ca-certiicates
+       - curl
+       - gnupg-agent
+       - sofware-properities-common
+    ignore_errors: True
+
+  - name: add GPG key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+    ignore_errors: True
+
+  - name: add docker repo
+    apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu bionic stable
+      state: present
+    ignore_errors: True
+
+  - name: install docker
+    ansible.builtin.apt:
+      name: "{{item}}"
+      state: present
+      force_apt_get: "yes"
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+    ignore_errors: True
+
+  - name: make sure that docker is active..
+    service:
+      name: docker
+      state: present
+      enabled: yes
+    ignore_errors: True
+
+  - name: stop running container
+    command: docker stop perscholas
+    ignore_errors: True
+
+  - name: remove container perscholas
+    command: docker rm perscholas
+    ignore_errors: True
+
+  - name: remove perscholas image
+    command: docker rmi abdallauno1/perscholas:v1
+    ignore_errors: True
+
+  - name: pulling image perscholas
+    command: docker pull abdallauno1/perscholas:v1
+
+  - name: create and run container
+    command: docker run -d -p 4000:5000 --name perscholas abdallauno1/perscholas:v1
+
+  - name: ufw disable
+    community.general.ufw:
+      state: "disabled"
+      policy: "allow"
+      logging: "on"
+
+  - name: Allow port range 4000-6000
+    community.general.ufw:
+      rule: allow
+      port: 4000:6000
+      proto: tcp
+
+  handlers:
+    - name: restart docker
+      service:
+        name: docker
+        state: restarted
+
+
+
+
+
+
+
